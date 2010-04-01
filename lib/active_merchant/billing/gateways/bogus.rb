@@ -11,6 +11,7 @@ module ActiveMerchant #:nodoc:
       UNSTORE_ERROR_MESSAGE = "Bogus Gateway: Use trans_id 1 for success, 2 for exception and anything else for error"
       CAPTURE_ERROR_MESSAGE = "Bogus Gateway: Use authorization number 1 for exception, 2 for error and anything else for success"
       VOID_ERROR_MESSAGE = "Bogus Gateway: Use authorization number 1 for exception, 2 for error and anything else for success"
+      RECURRING_ERROR_MESSAGE = "Bogus Gateway: Use profile_id 1 for exception, 2 for error and anything else for success"
       
       self.supported_countries = ['US']
       self.supported_cardtypes = [:bogus]
@@ -91,6 +92,39 @@ module ActiveMerchant #:nodoc:
           Response.new(false, FAILURE_MESSAGE, {:error => FAILURE_MESSAGE },:test => true)
         else
           raise Error, UNSTORE_ERROR_MESSAGE
+        end
+      end
+
+      def recurring(money, creditcard, options = {})
+        case creditcard.number
+        when '1'
+          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money.to_s}, :test => true)
+        when '2'
+          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money.to_s, :error => FAILURE_MESSAGE },:test => true)
+        else
+          raise Error, ERROR_MESSAGE
+        end
+      end
+
+      def recurring_inquiry(profile_id, options = {})
+        case profile_id
+        when '1'
+          raise Error, RECURRING_ERROR_MESSAGE
+        when '2'
+          Response.new(false, FAILURE_MESSAGE, { :error => FAILURE_MESSAGE }, :test => true)
+        else
+          Response.new(true, SUCCESS_MESSAGE, {}, :test => true)
+        end
+      end
+
+      def cancel_recurring(profile_id)
+        case profile_id
+        when '1'
+          raise Error, RECURRING_ERROR_MESSAGE
+        when '2'
+          Response.new(false, FAILURE_MESSAGE, { :error => FAILURE_MESSAGE }, :test => true)
+        else
+          Response.new(true, SUCCESS_MESSAGE, {}, :test => true)
         end
       end
     end

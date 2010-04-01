@@ -35,6 +35,18 @@ class BogusTest < Test::Unit::TestCase
   def test_unstore
     @gateway.unstore('1')
   end
+
+  def test_recurring
+    @gateway.recurring(1000, @creditcard)
+  end
+
+  def test_cancel_recurring
+    @gateway.cancel_recurring(@response.params["transid"])
+  end
+
+  def test_recurring_inquiry
+    @gateway.recurring_inquiry(@response.params["transid"])
+  end
   
   def test_supported_countries
     assert_equal ['US'], BogusGateway.supported_countries
