@@ -5,7 +5,7 @@ require 'rake/rdoctask'
 require 'rake/gempackagetask'
 require 'lib/support/gateway_support'
 
-VERSION = "1.5.1"
+VERSION = "1.5.1.1"
 
 desc "Run the unit test suite"
 task :default => 'test:units'
