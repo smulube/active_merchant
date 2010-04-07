@@ -4,8 +4,7 @@ require 'rake/testtask'
 require 'rake/rdoctask'
 require 'rake/gempackagetask'
 require 'lib/support/gateway_support'
-
-VERSION = "1.5.1.1"
+require 'lib/active_merchant'
 
 desc "Run the unit test suite"
 task :default => 'test:units'
@@ -66,12 +65,12 @@ namespace :rubyforge do
   task :publish => :package do
     require 'rubyforge'
   
-    packages = %w( gem tgz zip ).collect{ |ext| "pkg/activemerchant-#{VERSION}.#{ext}" }
+    packages = %w( gem tgz zip ).collect{ |ext| "pkg/activemerchant-#{ActiveMerchant::VERSION}.#{ext}" }
   
     rubyforge = RubyForge.new
     rubyforge.configure
     rubyforge.login
-    rubyforge.add_release('activemerchant', 'activemerchant', "REL #{VERSION}", *packages)
+    rubyforge.add_release('activemerchant', 'activemerchant', "REL #{ActiveMerchant::VERSION}", *packages)
   end
 
   desc 'Upload RDoc to RubyForge'

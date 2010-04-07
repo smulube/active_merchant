@@ -38,6 +38,7 @@ require 'active_merchant/lib/requires_parameters'
 require 'active_merchant/lib/country'
 
 require 'active_merchant/billing'
+require 'active_merchant/version'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:    
