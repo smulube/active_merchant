@@ -1,32 +1,49 @@
 require 'rubygems'
-require 'rake'
-require 'rake/testtask'
-require 'rake/rdoctask'
-require 'rake/gempackagetask'
 require 'lib/support/gateway_support'
 require 'lib/active_merchant'
+
+begin
+  require 'jeweler'
+  Jeweler::Tasks.new do |gemspec|
+    gemspec.name = "smulube-activemerchant"
+    gemspec.version = ActiveMerchant::VERSION
+    gemspec.summary = 'Framework and tools for dealing with credit card transactions.'
+    gemspec.description  = 'Active Merchant is a simple payment abstraction library used in and sponsored by Shopify. It is written by Tobias Luetke, Cody Fauser, and contributors. The aim of the project is to feel natural to Ruby users and to abstract as many parts as possible away from the user to offer a consistent interface across all supported gateways.'
+    gemspec.email = "tobi@leetsoft.com"
+    gemspec.authors = ["Tobias Luetke", "Cody Fauser", "Dennis Thiesen", "Sam Mulube"]
+    gemspec.homepage = 'http://activemerchant.org/'
+    gemspec.add_dependency('activesupport', '>= 2.3.2')
+    gemspec.add_dependency('builder', '>= 2.0.0')
+  
+    gemspec.signing_key = ENV['GEM_PRIVATE_KEY']
+    gemspec.cert_chain  = ['gem-public_cert.pem']
+  end
+  Jeweler::GemcutterTasks.new
+rescue LoadError
+  puts "Jeweler not available. Install it with: gem install jeweler"
+end
+
+require 'rake/testtask'
+namespace :test do
+  Rake::TestTask.new(:units) do |test|
+    test.libs << 'lib' << 'test'
+    test.pattern = 'test/unit/**/*_test.rb'
+    test.verbose = true
+    test.ruby_opts << '-rubygems'
+  end
+
+  Rake::TestTask.new(:remote) do |test|
+    test.libs << 'lib' << 'test'
+    test.pattern = 'test/remote/**/*_test.rb'
+    test.verbose = true
+    test.ruby_opts << '-rubygems'
+  end
+end
 
 desc "Run the unit test suite"
 task :default => 'test:units'
 
-namespace :test do
-
-  Rake::TestTask.new(:units) do |t|
-    t.pattern = 'test/unit/**/*_test.rb'
-    t.ruby_opts << '-rubygems'
-    t.libs << 'test'
-    t.verbose = true
-  end
-
-  Rake::TestTask.new(:remote) do |t|
-    t.pattern = 'test/remote/**/*_test.rb'
-    t.ruby_opts << '-rubygems'
-    t.libs << 'test'
-    t.verbose = true
-  end
-
-end
-
+require 'rake/rdoctask'
 Rake::RDocTask.new do |rdoc|
   rdoc.rdoc_dir = 'doc'
   rdoc.title    = "ActiveMerchant library"
@@ -36,54 +53,8 @@ Rake::RDocTask.new do |rdoc|
   rdoc.rdoc_files.exclude('lib/tasks')
 end
 
-desc "Delete tar.gz / zip / rdoc"
-task :cleanup => [ :clobber_package, :clobber_rdoc ]
-
-spec = eval(File.read('activemerchant.gemspec'))
-
-Rake::GemPackageTask.new(spec) do |p|
-  p.gem_spec = spec
-  p.need_tar = true
-  p.need_zip = true
-end
-
-desc "Release the gems and docs to RubyForge"
-task :release => [ 'gemcutter:publish', 'rubyforge:publish', 'rubyforge:upload_rdoc' ]
-
-namespace :gemcutter do
-  desc "Publish to gemcutter"
-  task :publish => :package do
-    require 'rake/gemcutter'
-    Rake::Gemcutter::Tasks.new(spec).define
-    Rake::Task['gem:push'].invoke
-  end
-end
-
-namespace :rubyforge do
-  
-  desc "Publish the release files to RubyForge."
-  task :publish => :package do
-    require 'rubyforge'
-  
-    packages = %w( gem tgz zip ).collect{ |ext| "pkg/activemerchant-#{ActiveMerchant::VERSION}.#{ext}" }
-  
-    rubyforge = RubyForge.new
-    rubyforge.configure
-    rubyforge.login
-    rubyforge.add_release('activemerchant', 'activemerchant', "REL #{ActiveMerchant::VERSION}", *packages)
-  end
-
-  desc 'Upload RDoc to RubyForge'
-  task :upload_rdoc => :rdoc do
-    require 'rake/contrib/rubyforgepublisher'
-    user = ENV['RUBYFORGE_USER'] 
-    project = "/var/www/gforge-projects/activemerchant"
-    local_dir = 'doc'
-    pub = Rake::SshDirPublisher.new user, project, local_dir
-    pub.upload
-  end
-  
-end
+require 'rake/clean'
+CLEAN.include("pkg")
 
 namespace :gateways do
   desc 'Print the currently supported gateways'
