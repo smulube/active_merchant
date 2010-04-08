@@ -55,7 +55,7 @@ class PayflowNvpUkTest < Test::Unit::TestCase
     assert_equal 'Essex', result["state"]
     assert_equal '164 Waverley Street', result["street"]
     assert_equal 'Coldingham', result["city"]
-    assert_equal 'NW12 8JB', result["zip"]
+    assert_equal 'NW128JB', result["zip"]
     assert_equal 'GB', result["country"]
   end
 
@@ -67,7 +67,7 @@ class PayflowNvpUkTest < Test::Unit::TestCase
     assert_equal 'Essex', result["shiptostate"]
     assert_equal '164 Waverley Street', result["shiptostreet"]
     assert_equal 'Coldingham', result["shiptocity"]
-    assert_equal 'NW12 8JB', result["shiptozip"]
+    assert_equal 'NW128JB', result["shiptozip"]
     assert_equal 'GB', result["shiptocountry"]
   end
 
@@ -144,7 +144,7 @@ class PayflowNvpUkTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     
     response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_equal 'Y', response.avs_result['code']
+    assert_equal 'D', response.avs_result['code']
     assert_equal 'Y', response.avs_result['street_match']
     assert_equal 'Y', response.avs_result['postal_match']
   end
@@ -162,14 +162,14 @@ class PayflowNvpUkTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     
     response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_equal 'Y', response.cvv_result['code']
+    assert_equal 'M', response.cvv_result['code']
   end
 
   private
   
   # Place raw successful response from gateway here
   def successful_purchase_response
-    'RESULT=0&PNREF=E78P1FF791C2&RESPMSG=Approved&AUTHCODE=111111&AVSADDR=Y&AVSZIP=Y&CVV2MATCH=Y&PPREF=EYHMAP72DIEARC7JY&CORRELATIONID=2c9706997458s&IAVS=Y'
+    'RESULT=0&PNREF=E78P1FF791C2&RESPMSG=Approved&AUTHCODE=111111&AVSADDR=Y&AVSZIP=Y&CVV2MATCH=Y&PROCCVV2=M&PPREF=EYHMAP72DIEARC7JY&CORRELATIONID=2c9706997458s&IAVS=Y&PROCAVS=D'
   end
   
   # Place raw failed response from gateway here

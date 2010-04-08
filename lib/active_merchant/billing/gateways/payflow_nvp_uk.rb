@@ -30,6 +30,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'GBP'
       self.partner = 'PayPalUk'
       self.money_format = :dollars
+      self.timeout = 30
 
       TRANSACTIONS = { 
         :purchase       => "S",
@@ -281,12 +282,12 @@ module ActiveMerchant #:nodoc:
           post[prefix+"city"]      = address[:city].to_s
           post[prefix+"state"]     = address[:state].blank?  ? 'n/a' : address[:state]
           post[prefix+"country"]   = address[:country].to_s
-          post[prefix+"zip"]       = address[:zip].to_s       
+          post[prefix+"zip"]       = address[:zip].to_s.sub(/\s+/,'')
         end         
       end
 
       def add_invoice(post, options)
-        post[:invnum] = options[:order_id].to_s.slice(0,127)
+        post[:invnum] = (options[:invoice] || options[:order_id]).to_s.slice(0,127) if options.has_key?(:invoice) || options.has_key?(:order_id) 
       end
       
       def add_creditcard(post, creditcard)      
@@ -301,7 +302,6 @@ module ActiveMerchant #:nodoc:
         post[:currency] = options[:currency] || currency(money)
       end
 
-      # need to add START, TERM, PAYPERIOD, ACTION
       def add_recurring_info(post, creditcard, options)
         post[:action] = options.has_key?(:profile_id) ? RECURRING_ACTIONS[:modify] : RECURRING_ACTIONS[:create]
         post[:start] = format_date(options[:starting_at])
@@ -341,9 +341,13 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:user] = @options[:login]
         post[:pwd] = @options[:password]
+        post[:partner] = @options[:partner]
+        post[:vendor] = @options[:login]
         post[:trxtype] = action if action
+        post[:tender] = "C"
+        post[:verbosity] = "MEDIUM"
         
-        request = post.merge(parameters).map { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        request = post.merge(parameters).map { |key, value| "#{key.to_s.upcase}=#{CGI.escape(value.to_s)}" }.join("&")
         request
       end
 
@@ -353,22 +357,25 @@ module ActiveMerchant #:nodoc:
           "Content-Length" => content_length.to_s,
       	  "X-VPS-Client-Timeout" => timeout.to_s,
       	  "X-VPS-VIT-Integration-Product" => "ActiveMerchant",
+          "X-VPS-VIT-Integration-Version" => ActiveMerchant::VERSION,
       	  "X-VPS-VIT-Runtime-Version" => RUBY_VERSION,
       	  "X-VPS-Request-ID" => Utils.generate_unique_id
     	  }
       end
       
       def commit(action, money, parameters)
+        parameters[:amt]  = amount(money) if money
+
         request = build_request(parameters, action)
         headers = build_headers(request.size)
 
-        parameters[:amount]  = amount(money) if money
     	  response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, request, headers))
+
         Response.new(response["RESULT"] == "0", response["RESPMSG"], response, 
           :authorization => response["PNREF"],
           :test => test?,
-          :cvv_result => response["CVV2MATCH"],
-          :avs_result => { :code => response["IAVS"] }
+          :cvv_result => response["PROCCVV2"],
+          :avs_result => { :code => response["PROCAVS"], :postal_match => response["AVSZIP"], :street_match => response["AVSADDR"] }
         )
         
       end
