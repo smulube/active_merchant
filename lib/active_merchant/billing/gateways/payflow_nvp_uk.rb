@@ -240,22 +240,22 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Parameters
       #
-      # * <tt>profile_id</tt>
-      # * <tt>options</tt>
+      # * <tt>profile_id</tt> - the id of the recurring profile we want to get the details of.
+      # * <tt>options</tt> - not currently used
       def recurring_inquiry(profile_id, options = {})
         post = {}
 
         post[:action] = RECURRING_ACTIONS[:inquiry]
         post[:origprofileid] = profile_id.to_s
 
-        commit(TRANSACTIONS[:recurring], nil, options)
+        commit(TRANSACTIONS[:recurring], nil, post)
       end
 
       # Cancel a recurring profile.
       #
       # ==== Parameters
       #
-      # * <tt>profile_id</tt>
+      # * <tt>profile_id</tt> - the id of the recurring profile to cancel
       def cancel_recurring(profile_id)
         post = {}
 
