@@ -16,6 +16,10 @@ class PayflowNvpUkTest < Test::Unit::TestCase
       :description => 'Store Purchase'
     }
   end
+
+  def test_able_to_view_gateway_url
+    assert_equal("https://pilot-payflowpro.paypal.com", @gateway.gateway_url)
+  end
   
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
