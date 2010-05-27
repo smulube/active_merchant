@@ -78,6 +78,10 @@ module ActiveMerchant #:nodoc:
         super
       end
 
+      # Return the url of the gateway
+      def gateway_url
+        return test? ? TEST_URL : LIVE_URL
+      end
 
       # Is the gateway in test mode?
       def test?
