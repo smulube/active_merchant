@@ -4,3 +4,4 @@
 *.swo
 .autotest
 *.gemspec
+pkg
