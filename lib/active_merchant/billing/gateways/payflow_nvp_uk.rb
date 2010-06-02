@@ -224,10 +224,11 @@ module ActiveMerchant #:nodoc:
       #   * <tt>:starting_at</tt> - Takes a Date, Time or string in MMDDYYYY format. The date must be in the future.
       #   * <tt>:name</tt> - The name of the customer to be billed. If omitted the name from the creditcard is used.
       #   * <tt>:periodicity</tt> - The frequency that the recurring payments will occur at. Can be one of: [:daily, :weekly, :biweekly (every 2 weeks), :semimonthly (twice every month), :quadweekly (once every 4 weeks), :monthly (every month on the same date as the first payment), :quarterly (every 3 months on the same date as the first payment), :semiyearly (every 6 months on the same date as the first payment), :yearly.
-      #   * <tt>:payments</tt> - Integer value describing the number of payments to be made.
+      #   * <tt>:payments</tt> - Integer value describing the number of payments to be made. If set to 0 then profile will continue until terminated
       #   * <tt>:comment<tt> - Optional description of the goods or service being purchased
       #   * <tt>:max_failed_payments</tt> - The number of payments that are allowed to fail before PayPal suspends the profile. Defaults to 0 which means PayPal will never suspend the profile until the term is completed. PayPal will keep attempting to process failed payments.
       #   * <tt>:currency</tt> - The currency of the transaction. If present must be one of { AUD, CAD, EUR, JPY, GBP or USD }. If omitted the default currency is used.
+      #   * <tt>:description</tt> - The description of the profile. Required for the profile to be created successfully.
       def recurring(money, creditcard, options = {})
         post = {}
         add_creditcard(post, creditcard)
@@ -266,7 +267,7 @@ module ActiveMerchant #:nodoc:
         post[:action] = RECURRING_ACTIONS[:deactivate]
         post[:origprofileid] = profile_id.to_s
 
-        commit(TRANSACTIONS[:recurring], nil, nil)
+        commit(TRANSACTIONS[:recurring], nil, post)
       end
     
       private                       
@@ -312,8 +313,9 @@ module ActiveMerchant #:nodoc:
         post[:term] = options[:payments] unless options[:payments].nil?
         post[:payperiod] = PERIODS[options[:periodicity]]
         post[:desc] = options[:comment] unless options[:comment].nil?
-        post[:maxfailedpayments] = options[:max_failed_payments] unless options[:max_failed_payments].nil?
+        post[:maxfailpayments] = options[:max_failed_payments] unless options[:max_failed_payments].nil?
         post[:profilename] = (options[:name] || creditcard.name).to_s.slice(0,128)
+        post[:desc] = options[:description]
       end
 
       def format_date(time)
